@@ -5,6 +5,7 @@ from app.config import settings
 
 JWT_SECRET = settings.JWT_SECRET
 JWT_ALGORITHM = settings.JWT_ALGORITHM
+TOKEN_BLACKLIST = set()
 
 
 def create_access_token(data: dict, expires_delta: int = 3600):
@@ -15,6 +16,8 @@ def create_access_token(data: dict, expires_delta: int = 3600):
 
 
 def verify_token(token: str):
+    if token in TOKEN_BLACKLIST:
+        raise HTTPException(status_code=401, detail="Token has been revoked")
     try:
         decoded = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return decoded
@@ -40,3 +43,10 @@ def require_role(current_user, allowed_roles: list[str]):
             status_code=403,
             detail=f"Access denied. Requires one of roles: {', '.join(allowed_roles)}"
         )
+    
+
+def destroy_token(token: str):
+    """
+    Add a token to blacklist so it cannot be used anymore.
+    """
+    TOKEN_BLACKLIST.add(token)

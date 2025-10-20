@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends,HTTPException,Query
 import aiomysql
 from app.db import get_db
 from app.utils.auth import get_current_user,require_role
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
@@ -15,8 +16,19 @@ async def list_jobs():
     return jobs
 
 
+class CreateJob(BaseModel):
+    title: str
+    description: str
+    company: str
+    location: str
+
 @router.post("/")
-async def create_job(title: str, description: str, company: str, location: str, current_user=Depends(get_current_user)):
+async def create_job(data:CreateJob,current_user=Depends(get_current_user)):
+    
+    title=data.title
+    description=data.description
+    company=data.company
+    location=data.location
     require_role(current_user, ["employer"])
     conn = await get_db()
     async with conn.cursor() as cur:
@@ -97,6 +109,17 @@ async def search_jobs(title: str = "", location: str = "", company: str = ""):
         jobs = await cur.fetchall()
     conn.close()
     return jobs
+
+@router.get("/{id}")
+async def search_jobs(id: int):
+    conn = await get_db()
+    async with conn.cursor(aiomysql.DictCursor) as cur:
+        query = "SELECT * FROM jobs WHERE is_closed = 0 AND id = %s ORDER BY created_at DESC"
+        await cur.execute(query, (id,))
+        jobs = await cur.fetchone()
+    conn.close()
+    return jobs
+
 
 @router.get("/job/{job_id}/applicants")
 async def get_applicants(
