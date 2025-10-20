@@ -66,10 +66,5 @@ Here’s a clean **table version of all backend APIs** for easy frontend integra
 | GET         | `/applications/resume/{applicant_id}`          | Employer  | Download applicant resume                                   |
 | PUT         | `/applications/update_status/{application_id}` | Employer  | Update application status (reviewed, shortlisted, rejected) |
 
----
-
-This table can be used directly for **frontend integration and API documentation**.
-
-Next, we can start building the **frontend skeleton** with login, job listing, and dashboards. Do you want me to start that?
-
+--
 
